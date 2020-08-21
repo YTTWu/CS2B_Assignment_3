@@ -17,11 +17,11 @@ class Transaction
 protected:
    string transactiondate;
    string transactionID;
-   string transactionAmount;
+   double transactionAmount;
 
 public:
    Transaction();
-   Transaction(string transDate, string transID, string transAmount);
+   Transaction(string transDate, string transID, double transAmount);
    virtual ~Transaction();
 
    bool  operator== (const Transaction & right) const;
@@ -35,7 +35,7 @@ public:
 
    string getTransdate();
    string getTransID();
-   string getTransAmount();
+   double getTransAmount();
 };
 
 
@@ -46,7 +46,7 @@ private:
    string returnPolicy;
 public:
    DepartmentStoreTransaction();
-   DepartmentStoreTransaction(string t_d, string t_I, string t_A, string d_N, string r_P);
+   DepartmentStoreTransaction(string t_d, string t_I, double t_A, string d_N, string r_P);
    ~DepartmentStoreTransaction();
 
    void setDepartmentName(string d_N);
@@ -64,17 +64,17 @@ class BankingTransaction : public Transaction
 {
 private:
    string type;
-   string feeCharge;
+   double feeCharge;
 public:
    BankingTransaction();
-   BankingTransaction(string t_d, string t_I, string t_A, string tp, string f_C);
+   BankingTransaction(string t_d, string t_I, double t_A, string tp, double f_C);
    ~BankingTransaction();
 
    void setType(string type);
    void setFreeCharge(double f_C);
 
    string getType();
-   string getFreecharge();
+   double getFreecharge();
 
    virtual void display();
    virtual void earmPoints();
@@ -87,7 +87,7 @@ private:
    string storeName;
 public:
    GroceryTransaction();
-   GroceryTransaction(string t_d, string t_I, string t_A, string s_N);
+   GroceryTransaction(string t_d, string t_I, double t_A, string s_N);
    ~GroceryTransaction();
 
    void setStoreName(string s_N);
@@ -167,13 +167,13 @@ void Customer::readTransactions()
    char transactionType;
    string transactionDate;
    string transactionId;
-   string transactionAmount;
+   double transactionAmount;
 
    string departmentName;
    string returnPolicy;
 
    string type;
-   string feeCharge;
+   double feeCharge;
 
    string storeName;
 
@@ -198,7 +198,7 @@ void Customer::readTransactions()
       transactionId = buffer;
 
       getline(fin, buffer, '~');
-      transactionAmount = buffer;
+      transactionAmount = stod(buffer);
 
 
       switch (buffer[0])
@@ -220,7 +220,7 @@ void Customer::readTransactions()
               getline(fin, buffer, '~');
               type = buffer;
               getline(fin, buffer, '~');
-              feeCharge = buffer;
+              feeCharge = stod(buffer);
 
               customerTran[tran_count] = new BankingTransaction
               (transactionDate, transactionId, transactionAmount, type, feeCharge);
@@ -237,14 +237,46 @@ void Customer::readTransactions()
            default:
               break;
         }
+   }
+}
 
 
+void Customer::reportAllTransactions()
+{
+   double totalFeeCharged = 0;
+   double transAmount = 0;;
 
+   DepartmentStoreTransaction *p_D;
+   BankingTransaction *p_B;
+   GroceryTransaction *p_G;
 
+   int d_C = 0, b_C = 0, g_C = 0;
+
+   for(int i = 0; i < tran_count; i++)
+   {
+      customerTran[i]->display();
+
+      transAmount += customerTran[i]->getTransAmount();
+
+      if((p_D = dynamic_cast<DepartmentStoreTransaction*>(customerTran[i])))
+      {
+         d_C++;
+      }
+
+      if((p_B = dynamic_cast<BankingTransaction*>(customerTran[i])))
+      {
+         b_C++;
+         totalFeeCharged += p_B->getFreecharge();
+      }
+
+      if((p_G = dynamic_cast<GroceryTransaction*>(customerTran[i])))
+      {
+         g_C++;
+      }
+      cout << endl;
    }
 
-
-
+   cout << "Total Purchase " << " Transaction type " << " Transaction count " << " Total " << endl;
 
 
 }
@@ -252,9 +284,9 @@ void Customer::readTransactions()
 
 
 //---------------------class Transaction definition----------------------
-Transaction::Transaction():transactiondate(""),transactionID(""), transactionAmount(""){}
+Transaction::Transaction():transactiondate(""),transactionID(""), transactionAmount(0.0){}
 
-Transaction::Transaction(string t_d, string t_I, string t_A):transactiondate(t_d),
+Transaction::Transaction(string t_d, string t_I, double t_A):transactiondate(t_d),
 transactionID(t_I), transactionAmount(t_A){}
 
 Transaction::~Transaction()
@@ -299,7 +331,7 @@ string Transaction::getTransID()
 }
 
 
-string Transaction::getTransAmount()
+double Transaction::getTransAmount()
 {
    return transactionAmount;
 }
@@ -309,7 +341,7 @@ string Transaction::getTransAmount()
 DepartmentStoreTransaction::DepartmentStoreTransaction():Transaction(), departmentName(""),
 returnPolicy(""){}
 
-DepartmentStoreTransaction::DepartmentStoreTransaction(string t_d, string t_I, string t_A, string d_N, string r_P):
+DepartmentStoreTransaction::DepartmentStoreTransaction(string t_d, string t_I, double t_A, string d_N, string r_P):
 Transaction(t_d, t_I, t_A), departmentName(d_N), returnPolicy(r_P){}
 
 void DepartmentStoreTransaction::setDepartmentName(string d_N)
@@ -332,13 +364,19 @@ string DepartmentStoreTransaction::getReturnPolicy()
    return returnPolicy;
 }
 
+void DepartmentStoreTransaction::display()
+{
+   cout << transactiondate << " Department Store: " << departmentName << " return in "
+   << returnPolicy << " $" << transactionAmount << endl;
+}
+
 
 
 
 //-----------------------class BankingTransaction definition-----------------
-BankingTransaction::BankingTransaction():Transaction(), type(""), feeCharge(""){}
+BankingTransaction::BankingTransaction():Transaction(), type(""), feeCharge(0.0){}
 
-BankingTransaction::BankingTransaction(string t_d, string t_I, string t_A, string tP, string f_C):
+BankingTransaction::BankingTransaction(string t_d, string t_I, double t_A, string tP, double f_C):
 Transaction(t_d, t_I, t_A), type(tP), feeCharge(f_C){}
 
 void BankingTransaction::setType(string type)
@@ -356,9 +394,15 @@ string BankingTransaction::getType()
    return type;
 }
 
-string BankingTransaction::getFreecharge()
+double BankingTransaction::getFreecharge()
 {
    return feeCharge;
+}
+
+void BankingTransaction::display()
+{
+   cout << transactiondate << " Banking: " << type << " " << transactionAmount
+   << " fee charged: " <<feeCharge << endl;
 }
 
 
@@ -366,7 +410,7 @@ string BankingTransaction::getFreecharge()
 //-----------------------class GroceryTransaction definition-----------------
 GroceryTransaction::GroceryTransaction():Transaction(), storeName(""){}
 
-GroceryTransaction::GroceryTransaction(string t_d, string t_I, string t_A, string s_N):
+GroceryTransaction::GroceryTransaction(string t_d, string t_I, double t_A, string s_N):
 Transaction(t_d, t_I, t_A), storeName(s_N){}
 
 void GroceryTransaction::setStoreName(string s_N)
@@ -377,4 +421,9 @@ void GroceryTransaction::setStoreName(string s_N)
 string GroceryTransaction::getStoreName()
 {
    return storeName;
+}
+
+void GroceryTransaction::display()
+{
+   cout << transactiondate << " Grocery " << transactionAmount << " " << storeName << endl;
 }
