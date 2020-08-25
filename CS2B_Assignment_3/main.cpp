@@ -27,7 +27,7 @@ public:
    bool  operator== (const Transaction & right) const;
 
    virtual void display() = 0;
-   virtual void earmPoints()= 0;
+   virtual double earmPoints()= 0;
 
    void setTransdate(int date);
    void setTransID(int id);
@@ -56,7 +56,7 @@ public:
    string getReturnPolicy();
 
    virtual void display();
-   virtual void earmPoints();
+   virtual double earmPoints();
 };
 
 
@@ -77,7 +77,7 @@ public:
    double getFreecharge();
 
    virtual void display();
-   virtual void earmPoints();
+   virtual double earmPoints();
 };
 
 
@@ -95,7 +95,7 @@ public:
    string getStoreName();
 
    virtual void display();
-   virtual void earmPoints();
+   virtual double earmPoints();
 };
 
 
@@ -108,7 +108,7 @@ private:
    string customerName;
    string creditCardNumber;
    double transactionBalance;
-   int rewardPointsTotal;
+   double rewardPointsTotal;
    Transaction *customerTran[array_size];
    int tran_count;
    //int tran_count = 0;
@@ -121,6 +121,12 @@ public:
    void readTransactions();
    void reportAllTransactions();
    void reportRewardSummary();
+
+   string getCustomerName();
+   string getCustomerCN();
+   double getTransBalance();
+   double getRewardP();
+
 
 
 
@@ -244,7 +250,12 @@ void Customer::readTransactions()
 void Customer::reportAllTransactions()
 {
    double totalFeeCharged = 0;
+   double totalBalance = 0;
    double transAmount = 0;;
+
+   double departmentPurchase = 0;
+   double BankinngPurchase = 0;
+   double groceryPurchase = 0;
 
    DepartmentStoreTransaction *p_D;
    BankingTransaction *p_B;
@@ -261,27 +272,91 @@ void Customer::reportAllTransactions()
       if((p_D = dynamic_cast<DepartmentStoreTransaction*>(customerTran[i])))
       {
          d_C++;
+         departmentPurchase += p_D->getTransAmount();
+
       }
 
       if((p_B = dynamic_cast<BankingTransaction*>(customerTran[i])))
       {
          b_C++;
          totalFeeCharged += p_B->getFreecharge();
+         BankinngPurchase += p_B->getTransAmount();
       }
 
       if((p_G = dynamic_cast<GroceryTransaction*>(customerTran[i])))
       {
          g_C++;
+         groceryPurchase += p_G->getTransAmount();
       }
       cout << endl;
    }
 
+   totalBalance = departmentPurchase + BankinngPurchase + groceryPurchase + totalFeeCharged;
+
+   cout << "Total fee charge: $" << totalFeeCharged << endl;
+   cout << "Total balance: $" << totalBalance << endl << endl;
+
    cout << "Total Purchase " << " Transaction type " << " Transaction count " << " Total " << endl;
+   cout << departmentPurchase << "          " << " Department Store " << d_C << endl;
+   cout << BankinngPurchase << "          " << " Banking " << b_C << endl;
+   cout << groceryPurchase << "          " << " Grocery Store " << g_C << endl;
 
 
 }
 
 
+void Customer::reportRewardSummary()
+{
+   DepartmentStoreTransaction *p_D;
+   GroceryTransaction *p_G;
+
+   double d_TotoalPoints = 0;
+   double g_TotalPoints = 0;
+   double totalPoints = 0;
+
+   for(int i = 0; i < tran_count; i++)
+   {
+      rewardPointsTotal += customerTran[i]->earmPoints();
+   }
+
+
+   cout << "Rewards Summary for " << getCustomerName() << " " << getCustomerCN() << endl;
+   cout << "Previous points balance: " << getRewardP() << endl;
+   cout << "+ Department store purchase:   " << d_TotoalPoints << endl;
+   cout << "+ Grocery purchase:   " << g_TotalPoints << endl << endl;
+
+   totalPoints = getRewardP() + d_TotoalPoints + g_TotalPoints;
+
+   cout << "Total points available for redemption: " << totalPoints << endl;
+
+
+
+
+}
+
+
+string Customer::getCustomerName()
+{
+   return customerName;
+}
+
+
+string Customer::getCustomerCN()
+{
+   return creditCardNumber;
+}
+
+
+double Customer::getTransBalance()
+{
+   return transactionBalance;
+}
+
+
+double Customer::getRewardP()
+{
+   return rewardPointsTotal;
+}
 
 //---------------------class Transaction definition----------------------
 Transaction::Transaction():transactiondate(""),transactionID(""), transactionAmount(0.0){}
@@ -370,6 +445,15 @@ void DepartmentStoreTransaction::display()
    << returnPolicy << " $" << transactionAmount << endl;
 }
 
+double DepartmentStoreTransaction::earmPoints()
+{
+   double points;
+
+   points = getTransAmount() * 1.5;
+
+   return points;
+}
+
 
 
 
@@ -405,6 +489,11 @@ void BankingTransaction::display()
    << " fee charged: " <<feeCharge << endl;
 }
 
+double BankingTransaction::earmPoints()
+{
+   return 0;
+}
+
 
 
 //-----------------------class GroceryTransaction definition-----------------
@@ -426,4 +515,13 @@ string GroceryTransaction::getStoreName()
 void GroceryTransaction::display()
 {
    cout << transactiondate << " Grocery " << transactionAmount << " " << storeName << endl;
+}
+
+double GroceryTransaction::earmPoints()
+{
+   double points;
+
+   points = getTransAmount() * 2.5;
+
+   return points;
 }
