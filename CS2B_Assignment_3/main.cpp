@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <stdlib.h>     /* atof */
 
 using namespace std;
 
@@ -55,8 +56,8 @@ public:
    string getDepartmentName();
    string getReturnPolicy();
 
-   virtual void display();
-   virtual double earmPoints();
+   void display();
+   double earmPoints();
 };
 
 
@@ -76,8 +77,8 @@ public:
    string getType();
    double getFreecharge();
 
-   virtual void display();
-   virtual double earmPoints();
+   void display();
+   double earmPoints();
 };
 
 
@@ -94,8 +95,8 @@ public:
 
    string getStoreName();
 
-   virtual void display();
-   virtual double earmPoints();
+   void display();
+   double earmPoints();
 };
 
 
@@ -115,7 +116,7 @@ private:
 
 public:
    Customer();
-   Customer(string c_name, string c_CN, double trans_B);
+   Customer(string c_name, string c_CN, double trans_B, double r_P);
    ~Customer();
 
    void readTransactions();
@@ -144,7 +145,12 @@ public:
 
 int main()
 {
-
+   Customer* p_customer = new Customer("Yuteng Wu", "1234567890123456", 10000, 998);
+     p_customer->readTransactions();
+     p_customer->reportAllTransactions();
+     p_customer->reportRewardSummary();
+     //p_customer->DuplicatedTransactionReport();
+     delete p_customer;
 
 }
 
@@ -155,12 +161,12 @@ int main()
 Customer::Customer():customerName(""),creditCardNumber(""),transactionBalance(0.0),
 rewardPointsTotal(1000), tran_count(0){}
 
-Customer::Customer(string c_name, string c_CN, double trans_B):customerName(c_name),
-creditCardNumber(c_CN), tran_count(0){}
+Customer::Customer(string c_name, string c_CN, double trans_B, double r_P):customerName(c_name),
+creditCardNumber(c_CN), tran_count(0), rewardPointsTotal(r_P){}
 
 Customer::~Customer()
 {
-   for(int i = 0; i < array_size; i++)
+   for(int i = 0; i < tran_count; i++)
    {
       delete customerTran[i];
    }
@@ -184,7 +190,7 @@ void Customer::readTransactions()
    string storeName;
 
 
-   ifstream fin("transactionReport");
+   ifstream fin("transactionReport.txt");
 
    if(!fin)
    {
@@ -195,6 +201,7 @@ void Customer::readTransactions()
 
    while(getline(fin, buffer, '~' ))
    {
+      buffer.erase(remove(buffer.begin(), buffer.end(), '\n'), buffer.end());
       transactionType = buffer[0];
 
       getline(fin, buffer, '~');
@@ -204,10 +211,10 @@ void Customer::readTransactions()
       transactionId = buffer;
 
       getline(fin, buffer, '~');
-      transactionAmount = stod(buffer);
+      transactionAmount = atof(buffer.c_str());
 
 
-      switch (buffer[0])
+      switch (transactionType)
         {
            case 'D':
               getline(fin, buffer, '~');
@@ -230,6 +237,8 @@ void Customer::readTransactions()
 
               customerTran[tran_count] = new BankingTransaction
               (transactionDate, transactionId, transactionAmount, type, feeCharge);
+
+              tran_count++;
               break;
 
            case 'G':
@@ -238,6 +247,8 @@ void Customer::readTransactions()
 
               customerTran[tran_count] = new GroceryTransaction
               (transactionDate, transactionId, transactionAmount, storeName);
+
+              tran_count++;
               break;
 
            default:
@@ -366,7 +377,7 @@ transactionID(t_I), transactionAmount(t_A){}
 
 Transaction::~Transaction()
 {
-
+   cout << "Transaction: " << transactionID << " destroyed" << endl;
 }
 
 
@@ -419,6 +430,11 @@ returnPolicy(""){}
 DepartmentStoreTransaction::DepartmentStoreTransaction(string t_d, string t_I, double t_A, string d_N, string r_P):
 Transaction(t_d, t_I, t_A), departmentName(d_N), returnPolicy(r_P){}
 
+DepartmentStoreTransaction::~DepartmentStoreTransaction()
+{
+
+}
+
 void DepartmentStoreTransaction::setDepartmentName(string d_N)
 {
    departmentName = d_N;
@@ -463,6 +479,11 @@ BankingTransaction::BankingTransaction():Transaction(), type(""), feeCharge(0.0)
 BankingTransaction::BankingTransaction(string t_d, string t_I, double t_A, string tP, double f_C):
 Transaction(t_d, t_I, t_A), type(tP), feeCharge(f_C){}
 
+BankingTransaction::~BankingTransaction()
+{
+
+}
+
 void BankingTransaction::setType(string type)
 {
    this->type = type;
@@ -501,6 +522,11 @@ GroceryTransaction::GroceryTransaction():Transaction(), storeName(""){}
 
 GroceryTransaction::GroceryTransaction(string t_d, string t_I, double t_A, string s_N):
 Transaction(t_d, t_I, t_A), storeName(s_N){}
+
+GroceryTransaction::~GroceryTransaction()
+{
+   
+}
 
 void GroceryTransaction::setStoreName(string s_N)
 {
