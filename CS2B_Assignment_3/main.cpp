@@ -274,6 +274,8 @@ void Customer::reportAllTransactions()
 
    int d_C = 0, b_C = 0, g_C = 0;
 
+   cout << "-----------------Transactions Listings-------------------" << endl;
+
    for(int i = 0; i < tran_count; i++)
    {
       customerTran[i]->display();
@@ -307,11 +309,11 @@ void Customer::reportAllTransactions()
    cout << "Total fee charge: $" << totalFeeCharged << endl;
    cout << "Total balance: $" << totalBalance << endl << endl;
 
-   cout << "Total Purchase " << " Transaction type " << " Transaction count " << " Total " << endl;
-   cout << departmentPurchase << "          " << " Department Store " << d_C << endl;
-   cout << BankinngPurchase << "          " << " Banking " << b_C << endl;
-   cout << groceryPurchase << "          " << " Grocery Store " << g_C << endl;
-
+   cout << "Total Purchase " << "  Transaction type " << "    Transaction count " << endl;
+   cout << departmentPurchase << "          " << " Department Store         " << d_C << endl;
+   cout << BankinngPurchase << "          " << "    Banking                  " << b_C << endl;
+   cout << groceryPurchase << "          " << "  Grocery Store            " << g_C << endl;
+   cout << "Total: " << totalBalance << endl << endl;
 
 }
 
@@ -327,7 +329,15 @@ void Customer::reportRewardSummary()
 
    for(int i = 0; i < tran_count; i++)
    {
-      rewardPointsTotal += customerTran[i]->earmPoints();
+      if((p_D = dynamic_cast<DepartmentStoreTransaction*>(customerTran[i])))
+      {
+         d_TotoalPoints += p_D->earmPoints();
+      }
+
+      else if((p_G = dynamic_cast<GroceryTransaction*>(customerTran[i])))
+      {
+         g_TotalPoints += p_G->earmPoints();
+      }
    }
 
 
@@ -432,7 +442,7 @@ Transaction(t_d, t_I, t_A), departmentName(d_N), returnPolicy(r_P){}
 
 DepartmentStoreTransaction::~DepartmentStoreTransaction()
 {
-
+   cout << "Transaction " << departmentName << " destroyed..." << endl;
 }
 
 void DepartmentStoreTransaction::setDepartmentName(string d_N)
@@ -481,7 +491,7 @@ Transaction(t_d, t_I, t_A), type(tP), feeCharge(f_C){}
 
 BankingTransaction::~BankingTransaction()
 {
-
+   cout << "Transaction " << type << " destroyed..." << endl;
 }
 
 void BankingTransaction::setType(string type)
@@ -525,7 +535,7 @@ Transaction(t_d, t_I, t_A), storeName(s_N){}
 
 GroceryTransaction::~GroceryTransaction()
 {
-   
+   cout << "Transaction " << storeName << " destroyed..." << endl;
 }
 
 void GroceryTransaction::setStoreName(string s_N)
